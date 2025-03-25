@@ -40,6 +40,28 @@ $room_result = $conn->query($sql);
                             $room_type_id = $room['id'];
                             $room_name = $room['name'];
 
+                            // Fetch the exam ID associated with this room from the `allot` table
+                            $exam_sql = "SELECT exam_id FROM `allot` WHERE room_type_id = '$room_type_id' LIMIT 1";
+                            $exam_result = $conn->query($exam_sql);
+                            
+                            if ($exam_result && $exam_result->num_rows > 0) {
+                                $exam = $exam_result->fetch_assoc();
+                                $exam_id = $exam['exam_id'];
+
+                                // Fetch the exam details using the exam ID
+                                $exam_details_sql = "SELECT name FROM `exam` WHERE id = '$exam_id'";
+                                $exam_details_result = $conn->query($exam_details_sql);
+                                
+                                if ($exam_details_result && $exam_details_result->num_rows > 0) {
+                                    $exam_details = $exam_details_result->fetch_assoc();
+                                    $exam_name = $exam_details['name'];
+                                } else {
+                                    $exam_name = 'No exam details found';
+                                }
+                            } else {
+                                $exam_name = 'No exam found for this room';
+                            }
+
                             // Fetch students allotted to this room
                             $student_sql = "SELECT as1.*, s.regno, as1.stud_id 
                                             FROM `allot_student` as as1
@@ -49,8 +71,8 @@ $room_result = $conn->query($sql);
                             
                             // Check if there are students for this room
                             if ($student_result && $student_result->num_rows > 0) {
-                                // Display room name
-                                echo "<h4>Room: " . htmlspecialchars($room_name) . "</h4>";
+                                // Display room name and exam name
+                                echo "<h4>Room: " . htmlspecialchars($room_name) . " - Exam: " . htmlspecialchars($exam_name) . "</h4>";
                                 echo "<table class='table table-bordered table-striped'>";
                                 echo "<thead><tr><th>Student Registration No</th><th>Exam Seat Number</th></tr></thead><tbody>";
                                 
@@ -65,7 +87,7 @@ $room_result = $conn->query($sql);
                                 echo "</tbody></table>";
                             } else {
                                 // No students found for this room
-                                echo "<h4>Room: " . htmlspecialchars($room_name) . "</h4>";
+                                echo "<h4>Room: " . htmlspecialchars($room_name) . " - Exam: " . htmlspecialchars($exam_name) . "</h4>";
                                 echo "<p>No students found for this room.</p>";
                             }
                         }
